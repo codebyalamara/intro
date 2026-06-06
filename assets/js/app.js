@@ -1,40 +1,285 @@
-const currentDate = document.getElementById('currentDate');
-const nextWeek = document.getElementById('nextWeek');
-const daysLeft = document.getElementById('daysLeft');
-const userAge = document.getElementById('userAge');
-const membership = document.getElementById('membership');
-const liveTime = document.getElementById('liveTime');
+const cl = console.log
+const spinner = document.getElementById('spinner')
+const BASE_URL = `https://jsonplaceholder.typicode.com`
 
-let today = moment();
+const POST_URL = `${BASE_URL}/posts`
 
-// Current Date
-currentDate.textContent =
-`Current Date : ${today.format('DD-MM-YYYY')}`;
+const postForm = document.getElementById('postForm')
+const titleControl = document.getElementById('title')
+const bodyControl = document.getElementById('body')
+const userIdControl = document.getElementById('userId')
+const addPostBtn = document.getElementById('addPostBtn')
+const updatePostBtn = document.getElementById('updatePostBtn')
 
-// Next Week Date
-nextWeek.textContent =
-`Next Week Date : ${moment().add(7, 'days').format('DD-MM-YYYY')}`;
+let postsArr = []
+let updateId = null
 
-// Days Left For New Year
-let newYear = moment('2027-01-01');
+function snackbar (msg, icon) {
+    Swal.fire({
+        title: msg,
+        icon: icon,
+        timer: 3000
+    })
+}
 
-daysLeft.textContent =
-`Days Left For New Year : ${newYear.diff(today, 'days')} days`;
+fetchPosts()
 
-// Age Calculator
-let dob = moment('2004-05-20');
+function createPostCards(arr) {
 
-userAge.textContent =
-`Age : ${today.diff(dob, 'years')} Years`;
+    const postContainer = document.getElementById('postContainer')
 
-// Membership Status
-let joinDate = moment('2026-01-01');
+    let result = ''
 
-membership.textContent =
-`Membership Active From : ${today.diff(joinDate, 'months')} Months`;
+    arr.forEach(post => {
 
-// Live Date & Time
-setInterval(() => {
-    liveTime.textContent =
-    `Live Time : ${moment().format('DD-MM-YYYY hh:mm:ss A')}`;
-}, 1000);
+        result += `
+            <div class="col-md-3 mb-3" id='${post.id}'>
+
+                <div class="card h-100">
+
+                    <div class="card-header">
+                        <h3>
+                           ${post.title}
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                    
+                        <p>
+                            ${post.body}
+                        </p>
+                        
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between">
+
+                        <button
+                            onclick="onEdit(this)"
+                            class="btn btn-sm btn-outline-info"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            onclick="onRemove(this)"
+                            class="btn btn-sm btn-outline-danger"
+                        >
+                            Remove
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `
+    })
+
+    postContainer.innerHTML = result
+}
+
+
+function fetchPosts () {
+
+    spinner.classList.remove('d-none')
+
+    let xhr = new XMLHttpRequest()
+
+    xhr.open('GET', POST_URL)
+
+    xhr.send(null)
+
+    xhr.onload = function () {
+
+        if (xhr.status >= 200 && xhr.status <= 299) {
+
+            // API CALL SUCCESS >> Templating
+
+            let data = JSON.parse(xhr.response)
+
+            postsArr = [...data]
+
+            createPostCards(data.reverse())
+            spinner.classList.add('d-none')
+
+        } else {
+
+            // msg snackbar
+            spinner.classList.add('d-none')
+            snackbar('Something went wrong', 'error')
+
+        }
+    }
+}
+
+
+function onPostSubmit(eve) {
+
+    eve.preventDefault()
+
+    // POST_OBJ
+
+    let POST_OBJ = {
+        title: titleControl.value,
+        body: bodyControl.value,
+        userId: userIdControl.value
+    }
+
+    cl(POST_OBJ)
+    // API CALL TO SAVE POST IN DB
+    // Spinner Show 
+    spinner.classList.remove('d-none')
+
+    let xhr = new XMLHttpRequest()
+
+    xhr.open('POST', POST_URL)
+
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8')
+
+    xhr.send(JSON.stringify(POST_OBJ))
+
+    xhr.onload = function () {
+
+        if (xhr.status >= 200 && xhr.status <= 299) {
+
+            // API CALL SUCCESS
+
+            let res = JSON.parse(xhr.response)
+
+            res.title = POST_OBJ.title
+            res.body = POST_OBJ.body
+            res.userId = POST_OBJ.userId
+
+            postForm.reset()
+
+            // CREATE A SINGLE CARD IN UI
+
+            let col = document.createElement('div')
+            col.className = 'col-md-3 mb-3'
+            col.id = res.id
+
+            col.innerHTML = `
+
+                <div class="card  h-100">
+
+                    <div class="card-header">
+                        <h3>
+                            ${res.title}
+                        </h3>
+                    </div>
+
+                    <div class="card-body">
+                        <p>
+                            ${res.body}
+                        </p>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between">
+
+                        <button
+                            onclick="onEdit(this)"
+                            class="btn btn-sm btn-outline-info"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            onclick="onRemove(this)"
+                            class="btn btn-sm btn-outline-danger"
+                        >
+                            Remove
+                        </button>
+
+                    </div>
+
+                </div>
+            `
+            const postContainer = document.getElementById('postContainer')
+            postContainer.prepend(col)
+            spinner.classList.add('d-none')
+            snackbar(`New post with id ${res.id} created successfully !!!`, 'success')
+        } else {
+            // snackbar error
+            spinner.classList.add('d-none')
+        }
+    }
+     // CREATE A NEW CARD ON UI
+
+    xhr.onerror = function () {
+        // show snackbar 
+        spinner.classList.add('d-none')
+    } 
+}
+
+function onEdit(ele) {
+    updateId = ele.closest('.col-md-3').id
+
+    let EDIT_URL = `${BASE_URL}/posts/${updateId}`
+
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', EDIT_URL)
+    xhr.send(null)
+
+    xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status <= 299) {
+            let res = JSON.parse(xhr.response)
+
+            titleControl.value = res.title
+            bodyControl.value = res.body
+            userIdControl.value = res.userId
+
+            addPostBtn.classList.add('d-none')
+            updatePostBtn.classList.remove('d-none')
+        }
+    }
+}
+
+function onUpdatePost() {
+
+    let UPDATE_OBJ = {
+        title: titleControl.value,
+        body: bodyControl.value,
+        userId: userIdControl.value
+    }
+
+    spinner.classList.remove('d-none')
+
+    let UPDATE_URL = `${BASE_URL}/posts/${updateId}`
+
+    let xhr = new XMLHttpRequest()
+
+    xhr.open('PATCH', UPDATE_URL)
+
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8')
+
+    xhr.send(JSON.stringify(UPDATE_OBJ))
+
+    xhr.onload = function () {
+
+        if (xhr.status >= 200 && xhr.status <= 299) {
+
+            let card = document.getElementById(updateId)
+
+            card.querySelector('h3').innerHTML = UPDATE_OBJ.title
+            card.querySelector('p').innerHTML = UPDATE_OBJ.body
+
+            postForm.reset()
+
+            updateId = null
+
+            addPostBtn.classList.remove('d-none')
+            updatePostBtn.classList.add('d-none')
+
+            spinner.classList.add('d-none')
+
+            snackbar('Post updated successfully !!!', 'success')
+
+        } else {
+            spinner.classList.add('d-none')
+            snackbar('Something went wrong', 'error')
+        }
+    }
+}
+
+postForm.addEventListener('submit', onPostSubmit)
+updatePostBtn.addEventListener('click', onUpdatePost)
