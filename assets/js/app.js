@@ -281,5 +281,56 @@ function onUpdatePost() {
     }
 }
 
+function onRemove(ele) {
+
+    let REMOVE_ID = ele.closest('.col-md-3').id
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to remove this post?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Remove',
+        cancelButtonText: 'Cancel'
+    }).then(result => {
+
+        if (result.isConfirmed) {
+
+            spinner.classList.remove('d-none')
+
+            let REMOVE_URL = `${BASE_URL}/posts/${REMOVE_ID}`
+
+            let xhr = new XMLHttpRequest()
+
+            xhr.open('DELETE', REMOVE_URL)
+
+            xhr.send(null)
+
+            xhr.onload = function () {
+
+                if (xhr.status >= 200 && xhr.status <= 299) {
+
+                    let card = document.getElementById(REMOVE_ID)
+
+                    card.remove()
+
+                    spinner.classList.add('d-none')
+
+                    snackbar('Post removed successfully !!!', 'success')
+
+                } else {
+                    spinner.classList.add('d-none')
+                    snackbar('Something went wrong', 'error')
+                }
+            }
+
+            xhr.onerror = function () {
+                spinner.classList.add('d-none')
+                snackbar('Something went wrong', 'error')
+            }
+        }
+    })
+}
+
 postForm.addEventListener('submit', onPostSubmit)
 updatePostBtn.addEventListener('click', onUpdatePost)
