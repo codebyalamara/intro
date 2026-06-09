@@ -1,7 +1,8 @@
 const cl = console.log
-const spinner = document.getElementById('spinner')
-const BASE_URL = `https://jsonplaceholder.typicode.com`
 
+const spinner = document.getElementById('spinner')
+
+const BASE_URL = `https://jsonplaceholder.typicode.com`
 const POST_URL = `${BASE_URL}/posts`
 
 const postForm = document.getElementById('postForm')

@@ -13,3 +13,9 @@ body{
     justify-content: center;
     align-items: center;
 }
+
+.card-header h3 { 
+    text-overflow: ellipsis;
+    overflow:hidden;
+    text-wrap:nowrap;
+}
