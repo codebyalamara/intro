@@ -94,8 +94,6 @@ function fetchPosts () {
 
         if (xhr.status >= 200 && xhr.status <= 299) {
 
-            // API CALL SUCCESS >> Templating
-
             let data = JSON.parse(xhr.response)
 
             postsArr = [...data]
@@ -105,7 +103,6 @@ function fetchPosts () {
 
         } else {
 
-            // msg snackbar
             spinner.classList.add('d-none')
             snackbar('Something went wrong', 'error')
 
@@ -118,7 +115,19 @@ function onPostSubmit(eve) {
 
     eve.preventDefault()
 
-    // POST_OBJ
+    if (
+        titleControl.value.trim() === '' ||
+        bodyControl.value.trim() === '' ||
+        userIdControl.value === ''
+    ) {
+        Swal.fire({
+            title: 'All Fields Are Required',
+            text: 'Please fill all the fields before submitting.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        })
+        return
+    }
 
     let POST_OBJ = {
         title: titleControl.value,
@@ -127,8 +136,7 @@ function onPostSubmit(eve) {
     }
 
     cl(POST_OBJ)
-    // API CALL TO SAVE POST IN DB
-    // Spinner Show 
+
     spinner.classList.remove('d-none')
 
     let xhr = new XMLHttpRequest()
@@ -143,8 +151,6 @@ function onPostSubmit(eve) {
 
         if (xhr.status >= 200 && xhr.status <= 299) {
 
-            // API CALL SUCCESS
-
             let res = JSON.parse(xhr.response)
 
             res.title = POST_OBJ.title
@@ -152,8 +158,6 @@ function onPostSubmit(eve) {
             res.userId = POST_OBJ.userId
 
             postForm.reset()
-
-            // CREATE A SINGLE CARD IN UI
 
             let col = document.createElement('div')
             col.className = 'col-md-3 mb-3'
@@ -200,15 +204,14 @@ function onPostSubmit(eve) {
             spinner.classList.add('d-none')
             snackbar(`New post with id ${res.id} created successfully !!!`, 'success')
         } else {
-            // snackbar error
             spinner.classList.add('d-none')
+            snackbar('Something went wrong', 'error')
         }
     }
-     // CREATE A NEW CARD ON UI
 
     xhr.onerror = function () {
-        // show snackbar 
         spinner.classList.add('d-none')
+        snackbar('Something went wrong', 'error')
     } 
 }
 
@@ -236,6 +239,20 @@ function onEdit(ele) {
 }
 
 function onUpdatePost() {
+
+    if (
+        titleControl.value.trim() === '' ||
+        bodyControl.value.trim() === '' ||
+        userIdControl.value === ''
+    ) {
+        Swal.fire({
+            title: 'All Fields Are Required',
+            text: 'Please fill all the fields before updating.',
+            icon: 'warning',
+            confirmButtonText: 'OK'
+        })
+        return
+    }
 
     let UPDATE_OBJ = {
         title: titleControl.value,
